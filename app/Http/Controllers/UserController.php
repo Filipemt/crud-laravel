@@ -3,21 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use GuzzleHttp\Promise\Create;
 use Illuminate\Http\Request;
+use GuzzleHttp\Promise\Create;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+
+    public function logout() {
+        auth()->logout();
+        return redirect('/');
+    }
     public function register(Request $request) {
         $incomingFields = $request->validate([
             'name' => ['required', 'min:3', 'max:15'],
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', Rule::unique('users', 'email')],
             'password' => ['required', 'min:8', 'max:200']
         ]);
 
         $incomingFields['password'] = bcrypt($incomingFields['password']);
-        User::create($incomingFields);
+        $user = User::create($incomingFields);
+        auth()->login($user);
 
-        return 'Hello From Our UserController';
+        return redirect('/');
     }
 }
